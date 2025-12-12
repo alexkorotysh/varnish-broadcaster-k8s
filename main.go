@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// resolveIPs performs a DNS lookup for the provided host and returns a slice of IP addresses.
 func resolveIPs(host string) ([]string, error) {
 	addrs, err := net.LookupHost(host)
 	if err != nil {
@@ -22,7 +23,10 @@ func resolveIPs(host string) ([]string, error) {
 	return addrs, nil
 }
 
-// broadcast sents requests to Pod’s with retry and timeout
+// broadcast performs a fan-out request to all resolved pod IPs.
+// For each IP it issues the same HTTP request with the provided method and path,
+// retrying up to `retries` times and using `timeout` per attempt.
+// It returns an error if any pod fails all attempts.
 func broadcast(ctx context.Context, host string, port, retries int, timeout time.Duration, r *http.Request) error {
 	ips, err := resolveIPs(host)
 	if err != nil {
@@ -89,7 +93,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Основной endpoint для fan-out
+	// Main fan-out endpoint: forwards the incoming request to all backend pods.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		err := broadcast(r.Context(), host, port, retries, timeout, r)
 		if err != nil {
@@ -101,7 +105,7 @@ func main() {
 		w.Write([]byte("OK\n"))
 	})
 
-	// Health check endpoint
+	// Health check endpoint: considers the service healthy if at least one pod responds.
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		ips, err := resolveIPs(host)
 		if err != nil || len(ips) == 0 {
@@ -110,7 +114,7 @@ func main() {
 			return
 		}
 
-		// проверка хотя бы одного Pod
+		// Verify that at least one pod is reachable and not returning server errors.
 		success := false
 		for _, ip := range ips {
 			url := fmt.Sprintf("http://%s:%d/", ip, port)
@@ -142,6 +146,7 @@ func main() {
 	}
 }
 
+// mustEnvInt reads an integer environment variable or returns the provided default.
 func mustEnvInt(key string, def int) int {
 	val := os.Getenv(key)
 	if val == "" {
@@ -151,6 +156,8 @@ func mustEnvInt(key string, def int) int {
 	return v
 }
 
+// mustEnvDuration reads a duration environment variable or returns the provided default.
+// If parsing fails, the default is returned.
 func mustEnvDuration(key string, def time.Duration) time.Duration {
 	val := os.Getenv(key)
 	if val == "" {
