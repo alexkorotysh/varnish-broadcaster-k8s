@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: broadcaster
+spec:
+  selector:
+    app: broadcaster
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 8080
+  type: {{ .Values.service.type }}

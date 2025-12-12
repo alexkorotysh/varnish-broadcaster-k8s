@@ -1,0 +1,5 @@
+apiVersion: v2
+name: broadcaster
+version: 0.1.0
+description: HTTP broadcaster proxy
+type: application

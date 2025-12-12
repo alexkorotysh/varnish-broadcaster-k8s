@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broadcaster
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: broadcaster
+  template:
+    metadata:
+      labels:
+        app: broadcaster
+    spec:
+      serviceAccountName: broadcaster
+      containers:
+        - name: broadcaster
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: BACKEND_HOST
+              value: "{{ .Values.backend.host }}"
+            - name: BACKEND_PORT
+              value: "{{ .Values.backend.port }}"
+            - name: RETRIES
+              value: "{{ .Values.backend.retries }}"
+            - name: TIMEOUT
+              value: "{{ .Values.backend.timeout }}"
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3

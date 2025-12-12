@@ -11,6 +11,7 @@
 ---
 
 ## 📂 Repository 
+```
 .
 ├── Dockerfile
 ├── helm
@@ -20,7 +21,7 @@
 │       └── values.yaml
 ├── main.go
 └── README.md
-
+```
 ---
 
 ## ⚡ Environment Variables

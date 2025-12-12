@@ -1,0 +1,18 @@
+replicaCount: 1
+
+image:
+  repository: your-registry/broadcaster
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+backend:
+  host: "varnish-headless.default.svc.cluster.local"
+  port: 6081
+  retries: 2
+  timeout: "3s"
+
+resources: {}
