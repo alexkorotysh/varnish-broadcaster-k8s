@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: your-registry/broadcaster
+  repository: ghcr.io/alexkorotysh/broadcaster
   tag: latest
   pullPolicy: IfNotPresent
 
